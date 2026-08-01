@@ -1,0 +1,184 @@
+name: tech-challenge-2
+
+x-local-aws-env: &local-aws-env
+  AWS_REGION: us-east-1
+  AWS_ACCESS_KEY_ID: local
+  AWS_SECRET_ACCESS_KEY: local
+  AWS_SESSION_TOKEN: local
+  AWS_EC2_METADATA_DISABLED: "true"
+
+services:
+  auth-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+      - ./auth-service/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  flag-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: flag_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - flag-db-data:/var/lib/postgresql/data
+      - ./flag-service/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d flag_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  targeting-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: targeting_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - targeting-db-data:/var/lib/postgresql/data
+      - ./targeting-service/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d targeting_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "/home/dynamodblocal/data", "-port", "8000"]
+    working_dir: /home/dynamodblocal
+    volumes:
+      - dynamodb-data:/home/dynamodblocal/data
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  sqs:
+    image: softwaremill/elasticmq-native:latest
+    ports:
+      - "9324:9324"
+    restart: unless-stopped
+
+  auth-service:
+    build:
+      context: ./auth-service
+    environment:
+      PORT: "8001"
+      DATABASE_URL: postgres://postgres:postgres@auth-db:5432/auth_db?sslmode=disable
+      MASTER_KEY: master-key-local
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+
+  flag-service:
+    build:
+      context: ./flag-service
+    command: ["python", "app.py"]
+    environment:
+      PORT: "8002"
+      DATABASE_URL: postgres://postgres:postgres@flag-db:5432/flag_db?sslmode=disable
+      AUTH_SERVICE_URL: http://auth-service:8001
+    depends_on:
+      flag-db:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    ports:
+      - "8002:8002"
+    restart: unless-stopped
+
+  targeting-service:
+    build:
+      context: ./targeting-service
+    environment:
+      PORT: "8003"
+      DATABASE_URL: postgres://postgres:postgres@targeting-db:5432/targeting_db?sslmode=disable
+      AUTH_SERVICE_URL: http://auth-service:8001
+    depends_on:
+      targeting-db:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    ports:
+      - "8003:8003"
+    restart: unless-stopped
+
+  evaluation-service:
+    build:
+      context: ./evaluation-service
+    environment:
+      <<: *local-aws-env
+      PORT: "8004"
+      REDIS_URL: redis://redis:6379
+      FLAG_SERVICE_URL: http://flag-service:8002
+      TARGETING_SERVICE_URL: http://targeting-service:8003
+      AWS_SQS_URL: http://sqs:9324/queue/evaluation-events
+      AWS_SQS_ENDPOINT_URL: http://sqs:9324
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      flag-service:
+        condition: service_started
+      targeting-service:
+        condition: service_started
+      sqs:
+        condition: service_started
+    ports:
+      - "8004:8004"
+    restart: unless-stopped
+
+  analytics-service:
+    build:
+      context: ./analytics-service
+    environment:
+      <<: *local-aws-env
+      PORT: "8005"
+      AWS_SQS_URL: http://sqs:9324/queue/evaluation-events
+      AWS_SQS_ENDPOINT_URL: http://sqs:9324
+      AWS_DYNAMODB_TABLE: ToggleMasterAnalytics
+      AWS_DYNAMODB_ENDPOINT_URL: http://dynamodb-local:8000
+    depends_on:
+      dynamodb-local:
+        condition: service_started
+      sqs:
+        condition: service_started
+    ports:
+      - "8005:8005"
+    restart: unless-stopped
+
+volumes:
+  auth-db-data:
+  flag-db-data:
+  targeting-db-data:
+  redis-data:
+  dynamodb-data:
