@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"crypto/sha1"
 	"encoding/binary"
 	"encoding/json"
@@ -9,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 )
