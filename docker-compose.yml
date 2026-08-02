@@ -70,10 +70,8 @@ services:
 
   dynamodb-local:
     image: amazon/dynamodb-local:latest
-    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "/home/dynamodblocal/data", "-port", "8000"]
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory", "-port", "8000"]
     working_dir: /home/dynamodblocal
-    volumes:
-      - dynamodb-data:/home/dynamodblocal/data
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -142,6 +140,7 @@ services:
       TARGETING_SERVICE_URL: http://targeting-service:8003
       AWS_SQS_URL: http://sqs:9324/queue/evaluation-events
       AWS_SQS_ENDPOINT_URL: http://sqs:9324
+      SERVICE_API_KEY: ${SERVICE_API_KEY}
     depends_on:
       redis:
         condition: service_healthy
