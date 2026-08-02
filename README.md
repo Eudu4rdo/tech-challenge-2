@@ -99,7 +99,7 @@ curl "http://localhost:8004/evaluate?user_id=user-123&flag_name=enable-new-dashb
 ## Próximos Passos
 
 - finalizar os manifestos Kubernetes
+- guia da etapa 4: [k8s/04-orquestracao-e-implantacao-manifestos.md](k8s/04-orquestracao-e-implantacao-manifestos.md)
 - ajustar os `Deployments`, `Services`, `Ingress` e `HPA`
 - documentar o fluxo de implantação na AWS
 - detalhar a segunda parte do trabalho neste README
-
