@@ -4,7 +4,7 @@ Projeto de microsserviços para gerenciamento e avaliação de feature flags, co
 
 ## Visão Geral
 
-O sistema foi dividido em 5 serviços:
+O ToggleMaster foi dividido em 5 serviços, cada um com responsabilidade bem definida:
 
 - `auth-service`: autenticação e geração/validação de chaves de API.
 - `flag-service`: cadastro e consulta de feature flags.
@@ -12,78 +12,58 @@ O sistema foi dividido em 5 serviços:
 - `evaluation-service`: caminho principal de avaliação da flag para o cliente.
 - `analytics-service`: consumo assíncrono de eventos enviados pelo `evaluation-service`.
 
-## Arquitetura Local
+### Objetivo da solução
 
-Na execução local, a solução usa `docker-compose.yml` para subir:
+A ideia é permitir que uma flag seja criada, avaliada e monitorada de forma desacoplada. O caminho de leitura precisa responder rápido para o cliente, enquanto o analytics pode processar eventos em segundo plano.
+
+### Papel dos data stores
+
+- `RDS`: persiste os dados transacionais dos serviços `auth-service`, `flag-service` e `targeting-service`.
+- `ElastiCache`: acelera a leitura de decisões de avaliação no `evaluation-service`.
+- `DynamoDB`: armazena os eventos assíncronos de analytics.
+
+## Arquitetura
+
+Fluxo principal:
+
+1. O cliente autentica e consome os endpoints expostos pelos serviços.
+2. `auth-service` valida a autenticação e emite a base para acesso aos demais serviços.
+3. `flag-service` mantém as feature flags.
+4. `targeting-service` guarda as regras de segmentação associadas às flags.
+5. `evaluation-service` consulta cache e serviços internos para decidir o resultado da flag.
+6. `analytics-service` consome eventos da fila e grava os dados no DynamoDB.
+
+### Desenho da arquitetura
+
+Inserir aqui o diagrama da solução com:
+
+- cliente
+- `auth-service`
+- `flag-service`
+- `targeting-service`
+- `evaluation-service`
+- `analytics-service`
+- `RDS`
+- `ElastiCache`
+- `SQS`
+- `DynamoDB`
+
+## Teste Local
+
+O ambiente local foi montado com `docker-compose.yml`, que sobe os serviços da aplicação e as dependências necessárias para a execução.
+
+### O que sobe localmente
 
 - bancos PostgreSQL para `auth-service`, `flag-service` e `targeting-service`
 - Redis para cache do `evaluation-service`
 - SQS local para fila de eventos
 - DynamoDB local para persistência dos eventos de analytics
 
-## Dificuldades Encontradas
+### Validação do fluxo
 
-### 1. Dependências Go sem `go.sum`
-
-O `auth-service` e o `evaluation-service` falharam no build por ausência ou inconsistência de `go.sum`.
-
-Correção aplicada:
-
-- geração do `go.sum`
-- ajuste dos imports não utilizados
-- correção da cópia de `go.sum` no Dockerfile do `evaluation-service`
-
-### 2. Incompatibilidade Flask e Werkzeug
-
-Os serviços Python falharam com erro de importação em `Werkzeug`, porque `Flask 2.2.2` não é compatível com `Werkzeug 3.x`.
-
-Correção aplicada:
-
-- fixação de `Werkzeug==2.2.3` em:
-  - `flag-service`
-  - `targeting-service`
-  - `analytics-service`
-
-### 3. Alpine e `psycopg2`
-
-Os serviços Python que usam PostgreSQL falharam na instalação do `psycopg2-binary` no Alpine.
-
-Correção aplicada:
-
-- instalação de `build-base` e `postgresql-dev` no estágio de build
-- instalação de `postgresql-libs` no estágio final
-
-### 4. Banco PostgreSQL local sem o database esperado
-
-O `auth-service` falhou porque o banco `auth_db` não existia no volume anterior.
-
-Correção aplicada:
-
-- remoção da stack com volumes
-- recriação do ambiente do zero
-
-### 5. DynamoDB local com erro de arquivo SQLite
-
-O `dynamodb-local` falhou tentando abrir arquivo de banco no volume local.
-
-Correção aplicada:
-
-- uso de `-inMemory` no container do DynamoDB local
-
-### 6. `evaluation-service` sem `SERVICE_API_KEY`
-
-O `evaluation-service` retornava erro genérico ao avaliar a flag porque não tinha a chave de serviço usada para autenticar contra `flag-service` e `targeting-service`.
-
-Correção aplicada:
-
-- criação de uma chave no `auth-service`
-- inclusão de `SERVICE_API_KEY` no ambiente do `evaluation-service`
-
-## Fluxo de Teste
-
-1. Subir a stack com Docker Compose.
+1. Subir a stack local com Docker Compose.
 2. Criar a chave de serviço para o `evaluation-service` no `auth-service`.
-3. Consultar o endpoint do `evaluation-service`:
+3. Chamar o endpoint de avaliação:
 
 ```bash
 curl "http://localhost:8004/evaluate?user_id=user-123&flag_name=enable-new-dashboard"
@@ -96,10 +76,105 @@ curl "http://localhost:8004/evaluate?user_id=user-123&flag_name=enable-new-dashb
 - mensagens chegando no SQS
 - itens gravados no DynamoDB
 
-## Próximos Passos
+## Resumo dos Desafios no Ambiente Local
 
-- finalizar os manifestos Kubernetes
-- guia da etapa 4: [k8s/04-orquestracao-e-implantacao-manifestos.md](k8s/04-orquestracao-e-implantacao-manifestos.md)
-- ajustar os `Deployments`, `Services`, `Ingress` e `HPA`
-- documentar o fluxo de implantação na AWS
-- detalhar a segunda parte do trabalho neste README
+Os principais problemas encontrados para rodar localmente foram os seguintes:
+
+### Dependências Go sem `go.sum`
+
+Os serviços Go falharam no build por ausência ou inconsistências no `go.sum`.
+
+O que foi feito:
+
+- geração do `go.sum`
+- ajuste de imports não utilizados
+- correção da cópia de `go.sum` no Dockerfile do `evaluation-service`
+
+### Incompatibilidade entre Flask e Werkzeug
+
+Os serviços Python falharam com erro de importação no `Werkzeug`, porque `Flask 2.2.2` não era compatível com `Werkzeug 3.x`.
+
+O que foi feito:
+
+- fixação de `Werkzeug==2.2.3` em:
+  - `flag-service`
+  - `targeting-service`
+  - `analytics-service`
+
+### Alpine e `psycopg2`
+
+Os serviços Python que usam PostgreSQL falharam na instalação do `psycopg2-binary` no Alpine.
+
+O que foi feito:
+
+- instalação de `build-base` e `postgresql-dev` no estágio de build
+- instalação de `postgresql-libs` no estágio final
+
+### Banco PostgreSQL local sem o banco esperado
+
+O `auth-service` falhou porque o banco `auth_db` não existia no volume anterior.
+
+O que foi feito:
+
+- remoção da stack com volumes
+- recriação do ambiente do zero
+
+### DynamoDB local com erro de arquivo SQLite
+
+O `dynamodb-local` falhou tentando abrir arquivo de banco no volume local.
+
+O que foi feito:
+
+- uso de `-inMemory` no container do DynamoDB local
+
+### `evaluation-service` sem `SERVICE_API_KEY`
+
+O `evaluation-service` retornava erro genérico ao avaliar a flag porque não tinha a chave de serviço usada para autenticar contra `flag-service` e `targeting-service`.
+
+O que foi feito:
+
+- criação de uma chave no `auth-service`
+- inclusão de `SERVICE_API_KEY` no ambiente do `evaluation-service`
+
+## Tópicos para a Próxima Versão
+
+### Provisionamento dos recursos em nuvem
+
+- RDS
+- ElastiCache
+- DynamoDB
+- SQS
+- ECR
+- IAM / LabRole
+
+### Configuração do cluster
+
+- criação e organização do namespace
+- acessos e permissões
+- integração do cluster com os recursos da AWS
+
+### Orquestração e implantação com manifestos
+
+- `Namespace`
+- `ConfigMap`
+- `Secret`
+- `Deployment`
+- `Service`
+- `Ingress`
+
+### Configuração e escalabilidade
+
+- estratégia de escalabilidade do `analytics-service`
+- HPA por CPU ou KEDA por fila
+- justificativa da escolha
+
+### Desafios encontrados na nuvem
+
+- limitações da `LabRole`
+- permissão para acessar ECR, SQS e DynamoDB
+- ajuste de variáveis de ambiente e credenciais
+
+## Referência dos Manifestos
+
+- [Guia de manifestos Kubernetes](k8s/04-orquestracao-e-implantacao-manifestos.md)
+

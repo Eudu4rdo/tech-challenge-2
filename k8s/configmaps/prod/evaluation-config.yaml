@@ -4,4 +4,4 @@ metadata:
   name: prod-evaluation-config
   namespace: tech-challenge-2
 data:
-  REDIS_URL: "redis://redis:6379"
+  REDIS_URL: "redis://redis:6379" # AJUSTAR: substituir pela URL real do Redis do ambiente

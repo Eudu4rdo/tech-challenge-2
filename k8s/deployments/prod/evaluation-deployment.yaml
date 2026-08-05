@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: evaluation-service
+  namespace: tech-challenge-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: evaluation-service
+  template:
+    metadata:
+      labels:
+        app: evaluation-service
+    spec:
+      containers:
+        - name: evaluation-service
+          image: <account-id>.dkr.ecr.<region>.amazonaws.com/evaluation-service:<tag> #Trocar quando deploy for feito
+          # AJUSTAR: substituir pela imagem real do ECR
+          ports:
+            - containerPort: 8004
+          env:
+            - name: PORT
+              value: "8004"
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: prod-evaluation-config
+                  key: REDIS_URL
+            - name: FLAG_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: prod-app-config
+                  key: FLAG_SERVICE_URL
+            - name: TARGETING_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: prod-app-config
+                  key: TARGETING_SERVICE_URL
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: prod-app-config
+                  key: AWS_REGION
+            - name: AWS_SQS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: prod-app-config
+                  key: AWS_SQS_URL
+            - name: AWS_SQS_ENDPOINT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: prod-app-config
+                  key: AWS_SQS_ENDPOINT_URL
+            - name: SERVICE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: prod-evaluation-secrets
+                  key: SERVICE_API_KEY
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8004
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8004
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 150m
+              memory: 128Mi

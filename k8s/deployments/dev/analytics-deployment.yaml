@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-service
+  namespace: tech-challenge-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analytics-service
+  template:
+    metadata:
+      labels:
+        app: analytics-service
+    spec:
+      containers:
+        - name: analytics-service
+          image: <account-id>.dkr.ecr.<region>.amazonaws.com/analytics-service:<tag> #Trocar quando deploy for feito
+          # AJUSTAR: substituir pela imagem real do ECR
+          ports:
+            - containerPort: 8005
+          env:
+            - name: PORT
+              value: "8005"
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: dev-app-config
+                  key: AWS_REGION
+            - name: AWS_SQS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: dev-app-config
+                  key: AWS_SQS_URL
+            - name: AWS_SQS_ENDPOINT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: dev-app-config
+                  key: AWS_SQS_ENDPOINT_URL
+            - name: AWS_DYNAMODB_TABLE
+              valueFrom:
+                configMapKeyRef:
+                  name: dev-analytics-config
+                  key: AWS_DYNAMODB_TABLE
+            - name: AWS_DYNAMODB_ENDPOINT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: dev-analytics-config
+                  key: AWS_DYNAMODB_ENDPOINT_URL
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: dev-analytic-secrets
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: dev-analytic-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_SESSION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: dev-analytic-secrets
+                  key: AWS_SESSION_TOKEN
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8005
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8005
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 150m
+              memory: 128Mi

@@ -88,7 +88,7 @@ services:
     environment:
       PORT: "8001"
       DATABASE_URL: postgres://postgres:postgres@auth-db:5432/auth_db?sslmode=disable
-      MASTER_KEY: master-key-local
+      MASTER_KEY: master-key-toggle-master
     depends_on:
       auth-db:
         condition: service_healthy

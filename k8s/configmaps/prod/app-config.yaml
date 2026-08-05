@@ -5,7 +5,7 @@ metadata:
   namespace: tech-challenge-2
 data:
   AWS_REGION: us-east-1
-  AWS_SQS_URL: "https://sqs.us-east-1.amazonaws.com/<account-id>/evaluation-events"
+  AWS_SQS_URL: "https://sqs.us-east-1.amazonaws.com/<account-id>/evaluation-events" # AJUSTAR: substituir pela URL real da fila SQS do ambiente
   AUTH_SERVICE_URL: "http://auth-service:8001"
   FLAG_SERVICE_URL: "http://flag-service:8002"
   TARGETING_SERVICE_URL: "http://targeting-service:8003"
