@@ -22,6 +22,19 @@ A ideia é permitir que uma flag seja criada, avaliada e monitorada de forma des
 - `ElastiCache`: acelera a leitura de decisões de avaliação no `evaluation-service`.
 - `DynamoDB`: armazena os eventos assíncronos de analytics.
 
+### Estratégia de cluster e namespace
+
+Para este projeto, a abordagem recomendada é usar **um único cluster** e **um namespace por ambiente**, em vez de um namespace para cada microsserviço.
+
+Essa escolha reduz a complexidade operacional e mantém o isolamento necessário entre os ambientes. Como os cinco serviços fazem parte da mesma aplicação e compartilham o mesmo ciclo de entrega, separar por microsserviço traria mais custo do que benefício.
+
+Dentro do namespace, os recursos continuam separados por nome:
+- `auth-service`
+- `flag-service`
+- `targeting-service`
+- `evaluation-service`
+- `analytics-service`
+
 ## Arquitetura
 
 Fluxo principal:
@@ -37,16 +50,38 @@ Fluxo principal:
 
 Inserir aqui o diagrama da solução com:
 
-- cliente
-- `auth-service`
-- `flag-service`
-- `targeting-service`
-- `evaluation-service`
-- `analytics-service`
-- `RDS`
-- `ElastiCache`
-- `SQS`
-- `DynamoDB`
+                  +-------------------+
+                  |      Cliente      |
+                  +---------+---------+
+                            |
+                            v
+                      +-----------+
+                      |  Ingress  |
+                      +-----+-----+
+                            |
+       +--------------------+--------------------+--------------------+--------------------+
+       |                    |                    |                    |                    |
+       v                    v                    v                    v                    v
+  +------------+     +-------------+     +--------------+     +----------------+     +----------------+
+  |auth-service|     | flag-service|     | targeting-   |     | evaluation-    |     | analytics-     |
+  |            |     |             |     | service      |     | service        |     | service        |
+  +-----+------+     +------+------ +     +------+-------+     +--------+-------+     +--------+-------+
+        |                   |                    |                      |                        |
+        v                   v                    v                      v                        v
+  +------------+     +-------------+     +--------------+        +-------------+          +----------------+
+  |   RDS      |     |   RDS       |     |   RDS        |        | ElastiCache |          |  DynamoDB      |
+  | auth DB    |     | flag DB     |     | targeting DB |        |   Redis     |          +----------------+
+  +------------+     +-------------+     +--------------+        +------+------+
+                                                                            |
+                                                                            v
+                                                                          +------+
+                                                                          | SQS  |
+                                                                          +------+
+                                                                            |
+                                                                            v
+                                                                +-------------------+
+                                                                | analytics-service |
+                                                                +-------------------+
 
 ## Teste Local
 
@@ -167,14 +202,3 @@ O que foi feito:
 - estratégia de escalabilidade do `analytics-service`
 - HPA por CPU ou KEDA por fila
 - justificativa da escolha
-
-### Desafios encontrados na nuvem
-
-- limitações da `LabRole`
-- permissão para acessar ECR, SQS e DynamoDB
-- ajuste de variáveis de ambiente e credenciais
-
-## Referência dos Manifestos
-
-- [Guia de manifestos Kubernetes](k8s/04-orquestracao-e-implantacao-manifestos.md)
-
