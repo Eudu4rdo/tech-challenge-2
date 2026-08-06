@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: evaluation-config
+  namespace: tech-challenge-2
+data:
+  # AJUSTAR: substituir pelo endpoint real do ElastiCache Redis
+  REDIS_URL: "redis://<redis-endpoint>:6379"

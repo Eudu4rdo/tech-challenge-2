@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: analytics-config
+  namespace: tech-challenge-2
+data:
+  AWS_REGION: us-east-1
+  # AJUSTAR: substituir pela URL real da fila SQS depois de criar o recurso
+  AWS_SQS_URL: "https://sqs.us-east-1.amazonaws.com/<account-id>/evaluation-events"
+  # AJUSTAR: manter exatamente o nome da tabela criada no DynamoDB
+  AWS_DYNAMODB_TABLE: "ToggleMasterAnalytics"

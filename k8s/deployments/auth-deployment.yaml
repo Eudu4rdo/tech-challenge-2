@@ -15,22 +15,24 @@ spec:
     spec:
       containers:
         - name: auth-service
-          image: <account-id>.dkr.ecr.<region>.amazonaws.com/auth-service:<tag> #Trocar quando deploy for feito
-          # AJUSTAR: substituir pela imagem real do ECR
+          # AJUSTAR: substituir pela imagem publicada no ECR
+          image: <account-id>.dkr.ecr.<region>.amazonaws.com/auth-service:<tag>
           ports:
             - containerPort: 8001
           env:
             - name: PORT
               value: "8001"
+            # AJUSTAR: usar a URL do RDS auth-db real depois do provisionamento
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: dev-auth-secrets
+                  name: auth-secrets
                   key: DATABASE_URL
+            # AJUSTAR: substituir pela chave mestra real do auth-service
             - name: MASTER_KEY
               valueFrom:
                 secretKeyRef:
-                  name: dev-auth-secrets
+                  name: auth-secrets
                   key: MASTER_KEY
           readinessProbe:
             httpGet:

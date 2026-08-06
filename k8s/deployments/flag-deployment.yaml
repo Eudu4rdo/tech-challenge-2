@@ -15,22 +15,24 @@ spec:
     spec:
       containers:
         - name: flag-service
-          image: <account-id>.dkr.ecr.<region>.amazonaws.com/flag-service:<tag> #Trocar quando deploy for feito
-          # AJUSTAR: substituir pela imagem real do ECR
+          # AJUSTAR: substituir pela imagem publicada no ECR
+          image: <account-id>.dkr.ecr.<region>.amazonaws.com/flag-service:<tag>
           ports:
             - containerPort: 8002
           env:
             - name: PORT
               value: "8002"
+            # AJUSTAR: usar a URL do RDS flag-db real depois do provisionamento
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: dev-flag-secrets
+                  name: flag-secrets
                   key: DATABASE_URL
+            # AJUSTAR: manter o endpoint interno do auth-service
             - name: AUTH_SERVICE_URL
               valueFrom:
                 configMapKeyRef:
-                  name: dev-app-config
+                  name: app-config
                   key: AUTH_SERVICE_URL
           readinessProbe:
             httpGet:

@@ -48,40 +48,7 @@ Fluxo principal:
 
 ### Desenho da arquitetura
 
-Inserir aqui o diagrama da solução com:
-
-                  +-------------------+
-                  |      Cliente      |
-                  +---------+---------+
-                            |
-                            v
-                      +-----------+
-                      |  Ingress  |
-                      +-----+-----+
-                            |
-       +--------------------+--------------------+--------------------+--------------------+
-       |                    |                    |                    |                    |
-       v                    v                    v                    v                    v
-  +------------+     +-------------+     +--------------+     +----------------+     +----------------+
-  |auth-service|     | flag-service|     | targeting-   |     | evaluation-    |     | analytics-     |
-  |            |     |             |     | service      |     | service        |     | service        |
-  +-----+------+     +------+------ +     +------+-------+     +--------+-------+     +--------+-------+
-        |                   |                    |                      |                        |
-        v                   v                    v                      v                        v
-  +------------+     +-------------+     +--------------+        +-------------+          +----------------+
-  |   RDS      |     |   RDS       |     |   RDS        |        | ElastiCache |          |  DynamoDB      |
-  | auth DB    |     | flag DB     |     | targeting DB |        |   Redis     |          +----------------+
-  +------------+     +-------------+     +--------------+        +------+------+
-                                                                            |
-                                                                            v
-                                                                          +------+
-                                                                          | SQS  |
-                                                                          +------+
-                                                                            |
-                                                                            v
-                                                                +-------------------+
-                                                                | analytics-service |
-                                                                +-------------------+
+[Diagrama](./diagrama.png)
 
 ## Teste Local
 
@@ -181,6 +148,7 @@ O que foi feito:
 - SQS
 - ECR
 - IAM / LabRole
+- guia rapido: [provisionamento-recursos-aws.md](./provisionamento-recursos-aws.md)
 
 ### Configuração do cluster
 
