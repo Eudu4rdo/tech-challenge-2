@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-schema-init
+  namespace: tech-challenge-2
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: db-schema-init
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: db-schema-init
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: AUTH_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secrets
+                  key: DATABASE_URL
+            - name: FLAG_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: flag-secrets
+                  key: DATABASE_URL
+            - name: TARGETING_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: targeting-secrets
+                  key: DATABASE_URL
+          command:
+            - sh
+            - -ec
+            - |
+              psql "$AUTH_DATABASE_URL" -v ON_ERROR_STOP=1 -f /schemas/auth-init.sql
+              psql "$FLAG_DATABASE_URL" -v ON_ERROR_STOP=1 -f /schemas/flag-init.sql
+              psql "$TARGETING_DATABASE_URL" -v ON_ERROR_STOP=1 -f /schemas/targeting-init.sql
+          volumeMounts:
+            - name: db-init-sql
+              mountPath: /schemas
+              readOnly: true
+      volumes:
+        - name: db-init-sql
+          configMap:
+            name: db-init-sql

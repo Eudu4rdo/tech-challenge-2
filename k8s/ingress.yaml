@@ -4,16 +4,10 @@ metadata:
   name: togglemaster-ingress
   namespace: tech-challenge-2
 spec:
+  ingressClassName: nginx
   rules:
     - http:
         paths:
-          - path: /auth
-            pathType: Prefix
-            backend:
-              service:
-                name: auth-service
-                port:
-                  number: 8001
           - path: /flags
             pathType: Prefix
             backend:
@@ -30,6 +24,62 @@ spec:
                   number: 8003
           - path: /evaluate
             pathType: Prefix
+            backend:
+              service:
+                name: evaluation-service
+                port:
+                  number: 8004
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: togglemaster-auth-ingress
+  namespace: tech-challenge-2
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /auth(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 8001
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: togglemaster-health-ingress
+  namespace: tech-challenge-2
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /health
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /flags/health
+            pathType: Exact
+            backend:
+              service:
+                name: flag-service
+                port:
+                  number: 8002
+          - path: /rules/health
+            pathType: Exact
+            backend:
+              service:
+                name: targeting-service
+                port:
+                  number: 8003
+          - path: /evaluate/health
+            pathType: Exact
             backend:
               service:
                 name: evaluation-service

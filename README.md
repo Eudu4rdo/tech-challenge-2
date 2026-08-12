@@ -170,3 +170,9 @@ O que foi feito:
 - estratégia de escalabilidade do `analytics-service`
 - HPA por CPU ou KEDA por fila
 - justificativa da escolha
+
+
+# DIFICULDADES NO SERVIDOR
+- Tentamos implementar na VPC padrão da conta e tivemos erros
+- Problemas pois esquecemos de colocar o Redis no Security Group
+- Precisamos ajustar o Ingress para fazer rewrite do path pois estavamos recebendo 404 (as rotas de health precisam vir com o prefixo da regra e as outras não)

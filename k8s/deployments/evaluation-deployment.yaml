@@ -13,42 +13,38 @@ spec:
       labels:
         app: evaluation-service
     spec:
-      # AJUSTAR: esta service account precisa existir com IRSA e permissao para SQS
-      serviceAccountName: evaluation-service-sa
       containers:
         - name: evaluation-service
-          # AJUSTAR: substituir pela imagem publicada no ECR
-          image: <account-id>.dkr.ecr.<region>.amazonaws.com/evaluation-service:<tag>
+          image: 686391723150.dkr.ecr.us-east-1.amazonaws.com/tech-challenge-2/evaluation-service:latest
           ports:
             - containerPort: 8004
+          envFrom:
+            - secretRef:
+                name: aws-credentials
+                optional: true
           env:
             - name: PORT
               value: "8004"
-            # AJUSTAR: apontar para o Redis real do ElastiCache
             - name: REDIS_URL
               valueFrom:
                 configMapKeyRef:
                   name: evaluation-config
                   key: REDIS_URL
-            # AJUSTAR: manter os endpoints internos dos outros servicos
             - name: FLAG_SERVICE_URL
               valueFrom:
                 configMapKeyRef:
                   name: app-config
                   key: FLAG_SERVICE_URL
-            # AJUSTAR: manter os endpoints internos dos outros servicos
             - name: TARGETING_SERVICE_URL
               valueFrom:
                 configMapKeyRef:
                   name: app-config
                   key: TARGETING_SERVICE_URL
-            # AJUSTAR: manter a regiao do ambiente AWS
             - name: AWS_REGION
               valueFrom:
                 configMapKeyRef:
                   name: app-config
                   key: AWS_REGION
-            # AJUSTAR: usar a URL real da fila SQS
             - name: AWS_SQS_URL
               valueFrom:
                 configMapKeyRef:

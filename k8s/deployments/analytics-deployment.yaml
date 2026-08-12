@@ -13,30 +13,28 @@ spec:
       labels:
         app: analytics-service
     spec:
-      # AJUSTAR: esta service account precisa existir com IRSA e permissao para SQS/DynamoDB
-      serviceAccountName: analytics-service-sa
       containers:
         - name: analytics-service
-          # AJUSTAR: substituir pela imagem publicada no ECR
-          image: <account-id>.dkr.ecr.<region>.amazonaws.com/analytics-service:<tag>
+          image: 686391723150.dkr.ecr.us-east-1.amazonaws.com/tech-challenge-2/analytics-service:latest
           ports:
             - containerPort: 8005
+          envFrom:
+            - secretRef:
+                name: aws-credentials
+                optional: true
           env:
             - name: PORT
               value: "8005"
-            # AJUSTAR: manter a regiao do ambiente AWS
             - name: AWS_REGION
               valueFrom:
                 configMapKeyRef:
                   name: analytics-config
                   key: AWS_REGION
-            # AJUSTAR: usar a URL real da fila SQS
             - name: AWS_SQS_URL
               valueFrom:
                 configMapKeyRef:
                   name: analytics-config
                   key: AWS_SQS_URL
-            # AJUSTAR: manter exatamente o nome da tabela DynamoDB criada
             - name: AWS_DYNAMODB_TABLE
               valueFrom:
                 configMapKeyRef:

@@ -16,7 +16,7 @@ spec:
       containers:
         - name: auth-service
           # AJUSTAR: substituir pela imagem publicada no ECR
-          image: <account-id>.dkr.ecr.<region>.amazonaws.com/auth-service:<tag>
+          image: 686391723150.dkr.ecr.us-east-1.amazonaws.com/tech-challenge-2/auth-service:latest
           ports:
             - containerPort: 8001
           env:
