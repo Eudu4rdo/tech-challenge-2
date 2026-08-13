@@ -86,103 +86,19 @@ Alguns manifestos são comuns a todo o cluster, enquanto outros são específico
 - **Service**: expõe os pods internamente no cluster e direciona o tráfego para as instâncias corretas.
 - **Ingress**: gerencia o acesso externo aos serviços. Neste projeto, foi utilizado para criar um endpoint único e aplicar as regras de roteamento para os diferentes serviços.
 
+## Desafios encontrados 
 
-============================================================================================== 
+No decorrer do desenvolvimento do projeto enfrentamos alguns desafio, desde desafios de código, quanto desafios de plataforma
 
-REFAZER
+### Desafios em código
+Durante o processo de construção dos Dockerfiles e docker-compose, foi identificado que os projetos possuiam incompatibilidades de depêndencias, tanto nos serviços em Go que possuia algumas divergencias, quanto nos projetos em Python que tambem possuia incompatibilidade de versões entre libs. Outro problema que surgiu no Python foi a falha da lib `psycopg2-binary` (usada pelo PostgreSQL) quando é usada imagem Alpine, para este caso, a solução foi instalar uma versão do PostgreSQL de desenvolvimento (`postgresql-dev`) no ambiente de teste.
 
-## Resumo dos Desafios no Ambiente Local
+Foram encontrados alguns outros problemas quando foram instanciados o PostgreSQL local por falta da configuração de banco, que foi resolvido subindo novamente o banco com a configuração correta. Já no DynamoDB local, o problema foi encontrado ao tentar iniciar o banco com SQLite, o que forçou a configurar o seu build com `-inMemory`.
 
-Os principais problemas encontrados para rodar localmente foram os seguintes:
+Quando a aplicação foi executada, os serviços funcionaram perfeitamente até chegarmos ao `evaluation-service` que retornava um erro genérico que depois dea alguma analise, foi constatada a falta de uma API KEY interna que estava documentada no seu [README.MD](/evaluation-service/README.md), para contornar, foi feita uma pequena alteração no [docker-compose](/docker-compose.yml) para aceitar essa configuração vinda de um arquivo `.env` na raiz do projeto, de forma que fosse fácil troca-la caso necessário.
 
-### Dependências Go sem `go.sum`
-
-Os serviços Go falharam no build por ausência ou inconsistências no `go.sum`.
-
-O que foi feito:
-
-- geração do `go.sum`
-- ajuste de imports não utilizados
-- correção da cópia de `go.sum` no Dockerfile do `evaluation-service`
-
-### Incompatibilidade entre Flask e Werkzeug
-
-Os serviços Python falharam com erro de importação no `Werkzeug`, porque `Flask 2.2.2` não era compatível com `Werkzeug 3.x`.
-
-O que foi feito:
-
-- fixação de `Werkzeug==2.2.3` em:
-  - `flag-service`
-  - `targeting-service`
-  - `analytics-service`
-
-### Alpine e `psycopg2`
-
-Os serviços Python que usam PostgreSQL falharam na instalação do `psycopg2-binary` no Alpine.
-
-O que foi feito:
-
-- instalação de `build-base` e `postgresql-dev` no estágio de build
-- instalação de `postgresql-libs` no estágio final
-
-### Banco PostgreSQL local sem o banco esperado
-
-O `auth-service` falhou porque o banco `auth_db` não existia no volume anterior.
-
-O que foi feito:
-
-- remoção da stack com volumes
-- recriação do ambiente do zero
-
-### DynamoDB local com erro de arquivo SQLite
-
-O `dynamodb-local` falhou tentando abrir arquivo de banco no volume local.
-
-O que foi feito:
-
-- uso de `-inMemory` no container do DynamoDB local
-
-### `evaluation-service` sem `SERVICE_API_KEY`
-
-O `evaluation-service` retornava erro genérico ao avaliar a flag porque não tinha a chave de serviço usada para autenticar contra `flag-service` e `targeting-service`.
-
-O que foi feito:
-
-- criação de uma chave no `auth-service`
-- inclusão de `SERVICE_API_KEY` no ambiente do `evaluation-service`
-
-## Tópicos para a Próxima Versão
-
-### Provisionamento dos recursos em nuvem
-
-- RDS
-- ElastiCache
-- DynamoDB
-- SQS
-- ECR
-- IAM / LabRole
-- guia rapido: [provisionamento-recursos-aws.md](./provisionamento-recursos-aws.md)
-
-### Configuração do cluster
-
-- criação e organização do namespace
-- acessos e permissões
-- integração do cluster com os recursos da AWS
-
-### Orquestração e implantação com manifestos
-
-- `Namespace`
-- `ConfigMap`
-- `Secret`
-- `Deployment`
-- `Service`
-- `Ingress`
-
-### Configuração e escalabilidade
-
-- estratégia de escalabilidade do `analytics-service`
-- HPA por CPU ou KEDA por fila
-- justificativa da escolha
+==============================================================================================
+### Desafios na Cloud
 
 
 # DIFICULDADES NA NUVEM
@@ -190,7 +106,13 @@ O que foi feito:
 - Tentamos implementar na VPC padrão da conta e tivemos erros
 - Problemas pois esquecemos de colocar o Redis no Security Group
 - Precisamos ajustar o Ingress para fazer rewrite do path pois estavamos recebendo 404 (as rotas de health precisam vir com o prefixo da regra e as outras não)
-=============================
+
+### Configuração e escalabilidade
+- estratégia de escalabilidade do `analytics-service`
+- HPA por CPU ou KEDA por fila
+- justificativa da escolha
+
+=======================================================================================
 ### Uso de IA
 
 ### Autores
