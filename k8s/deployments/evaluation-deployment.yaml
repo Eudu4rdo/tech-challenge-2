@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: evaluation-service
-          image: 686391723150.dkr.ecr.us-east-1.amazonaws.com/tech-challenge-2/evaluation-service:latest
+          image: <REGISTRY_URL>/evaluation-service:latest
           ports:
             - containerPort: 8004
           envFrom:
@@ -50,7 +50,6 @@ spec:
                 configMapKeyRef:
                   name: app-config
                   key: AWS_SQS_URL
-            # AJUSTAR: substituir pela chave gerada no auth-service
             - name: SERVICE_API_KEY
               valueFrom:
                 secretKeyRef:

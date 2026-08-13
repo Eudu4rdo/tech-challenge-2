@@ -4,5 +4,4 @@ metadata:
   name: evaluation-config
   namespace: tech-challenge-2
 data:
-  # AJUSTAR: substituir pelo endpoint real do ElastiCache Redis
-  REDIS_URL: "redis://evaluation-redis.zwldub.ng.0001.use1.cache.amazonaws.com:6379"
+  REDIS_URL: "<URL_DO_REDIS>"

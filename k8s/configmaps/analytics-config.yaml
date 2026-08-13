@@ -5,7 +5,5 @@ metadata:
   namespace: tech-challenge-2
 data:
   AWS_REGION: us-east-1
-  # AJUSTAR: substituir pela URL real da fila SQS depois de criar o recurso
-  AWS_SQS_URL: "https://sqs.us-east-1.amazonaws.com/686391723150/evaluation-events"
-  # AJUSTAR: manter exatamente o nome da tabela criada no DynamoDB
-  AWS_DYNAMODB_TABLE: "ToggleMasterAnalytics"
+  AWS_SQS_URL: "<URL_DA_FILA_SQS>"
+  AWS_DYNAMODB_TABLE: "<NOME_DA_TABELA_DYNAMODB>"

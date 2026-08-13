@@ -15,20 +15,17 @@ spec:
     spec:
       containers:
         - name: auth-service
-          # AJUSTAR: substituir pela imagem publicada no ECR
-          image: 686391723150.dkr.ecr.us-east-1.amazonaws.com/tech-challenge-2/auth-service:latest
+          image: <REGISTRY_URL>/auth-service:latest
           ports:
             - containerPort: 8001
           env:
             - name: PORT
               value: "8001"
-            # AJUSTAR: usar a URL do RDS auth-db real depois do provisionamento
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: auth-secrets
                   key: DATABASE_URL
-            # AJUSTAR: substituir pela chave mestra real do auth-service
             - name: MASTER_KEY
               valueFrom:
                 secretKeyRef:

@@ -15,20 +15,17 @@ spec:
     spec:
       containers:
         - name: flag-service
-          # AJUSTAR: substituir pela imagem publicada no ECR
-          image: 686391723150.dkr.ecr.us-east-1.amazonaws.com/tech-challenge-2/flag-service:latest
+          image: <REGISTRY_URL>/flag-service:latest
           ports:
             - containerPort: 8002
           env:
             - name: PORT
               value: "8002"
-            # AJUSTAR: usar a URL do RDS flag-db real depois do provisionamento
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: flag-secrets
                   key: DATABASE_URL
-            # AJUSTAR: manter o endpoint interno do auth-service
             - name: AUTH_SERVICE_URL
               valueFrom:
                 configMapKeyRef:

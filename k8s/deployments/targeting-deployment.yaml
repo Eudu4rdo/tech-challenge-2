@@ -15,20 +15,17 @@ spec:
     spec:
       containers:
         - name: targeting-service
-          # AJUSTAR: substituir pela imagem publicada no ECR
-          image: 686391723150.dkr.ecr.us-east-1.amazonaws.com/tech-challenge-2/targeting-service:latest
+          image: <REGISTRY_URL>/targeting-service:latest
           ports:
             - containerPort: 8003
           env:
             - name: PORT
               value: "8003"
-            # AJUSTAR: usar a URL do RDS targeting-db real depois do provisionamento
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: targeting-secrets
                   key: DATABASE_URL
-            # AJUSTAR: manter o endpoint interno do auth-service
             - name: AUTH_SERVICE_URL
               valueFrom:
                 configMapKeyRef:

@@ -8,5 +8,4 @@ data:
   AUTH_SERVICE_URL: "http://auth-service:8001"
   FLAG_SERVICE_URL: "http://flag-service:8002"
   TARGETING_SERVICE_URL: "http://targeting-service:8003"
-  # AJUSTAR: substituir pela URL real da fila SQS depois de criar o recurso
-  AWS_SQS_URL: "https://sqs.us-east-1.amazonaws.com/686391723150/evaluation-events"
+  AWS_SQS_URL: "<URL_DA_FILA_SQS>"
