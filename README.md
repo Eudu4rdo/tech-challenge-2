@@ -14,6 +14,20 @@ O projeto foi dividido em cinco serviços, cada um com uma responsabilidade bem 
 
 Cada serviço possui seu próprio `Dockerfile`, respeitando as diferenças de stack, dependências e requisitos de execução.
 
+## 🧪 Teste local
+
+O ambiente local foi montado com `docker-compose.yml`, responsável por provisionar os recursos necessários e construir os containers com base no `Dockerfile` de cada serviço.
+
+### O que sobe localmente
+
+- Bancos PostgreSQL para `auth-service`, `flag-service` e `targeting-service`.
+- Redis para cache do `evaluation-service`.
+- SQS local para fila de eventos.
+- DynamoDB local para persistência dos eventos de analytics.
+
+No ambiente local, também foi criado um arquivo `.env` para configurar a variável `SERVICE_API_KEY`, essencial para a comunicação autenticada entre os serviços.
+
+
 ## 🧱 Arquitetura
 
 Fluxo principal:
@@ -43,19 +57,6 @@ Além dos serviços da aplicação, foi necessário provisionar recursos na AWS 
 Cada serviço possui uma necessidade específica de armazenamento. Para os serviços responsáveis pelo controle dos dados transacionais da aplicação (`auth-service`, `flag-service` e `targeting-service`), foi utilizado PostgreSQL, pois o modelo relacional oferece maior integridade e consistência.
 
 No `evaluation-service`, a prioridade é o tempo de resposta. Por isso, foi utilizado Redis como cache em memória, reduzindo a necessidade de consultas repetidas aos serviços internos. Já o `analytics-service` utiliza DynamoDB, uma opção adequada para armazenar eventos analíticos que não exigem uma estrutura relacional rígida.
-
-## 🧪 Teste local
-
-O ambiente local foi montado com `docker-compose.yml`, responsável por provisionar os recursos necessários e construir os containers com base no `Dockerfile` de cada serviço.
-
-### O que sobe localmente
-
-- Bancos PostgreSQL para `auth-service`, `flag-service` e `targeting-service`.
-- Redis para cache do `evaluation-service`.
-- SQS local para fila de eventos.
-- DynamoDB local para persistência dos eventos de analytics.
-
-No ambiente local, também foi criado um arquivo `.env` para configurar a variável `SERVICE_API_KEY`, essencial para a comunicação autenticada entre os serviços.
 
 ## 🚀 Provisionamento no Kubernetes
 
