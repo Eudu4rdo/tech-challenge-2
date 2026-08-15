@@ -129,7 +129,7 @@ Neste projeto, a IA foi utilizada como apoio em situações nas quais o grupo pr
 | Nome | RM | Discord | E-mail |
 | --- | --- | --- | --- |
 | Allison Martins Orsini | rm375470 | Alisson Martins Orsini - rm375470 | alisson_mo@hotmail.com |
-| Diogo Soares da Silva |  |  |  |
+| Diogo Soares da Silva | rm375029 | Diogo Soares - rm375029 | diogosoaresk8@hotmail.com |
 | Eduardo Garcia Barbara | rm374946 | Eduardo Garcia - rm374946 | eg47202@gmail.com |
 | Eduardo Luiz Fonseca |  |  |  |
 
