@@ -131,7 +131,7 @@ Neste projeto, a IA foi utilizada como apoio em situações nas quais o grupo pr
 | Allison Martins Orsini | rm375470 | Alisson Martins Orsini - rm375470 | alisson_mo@hotmail.com |
 | Diogo Soares da Silva | rm375029 | Diogo Soares - rm375029 | diogosoaresk8@hotmail.com |
 | Eduardo Garcia Barbara | rm374946 | Eduardo Garcia - rm374946 | eg47202@gmail.com |
-| Eduardo Luiz Fonseca |  |  |  |
+| Eduardo Luiz Fonseca | rm374901 | Eduardo Fonseca - rm374901 | eduardzs.fonseca@gmail.com |
 
 ## 🏅 Link do certificado do Google Skills
 
